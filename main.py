@@ -87,18 +87,26 @@ def analyze_stock(ticker: str):
         risk_percent = 100 - (model.score(features[:-1], target[:-1]) * 100)
         if predicted_price < current_price:
             should_buy = "Dont Buy"
+            analysis = {
+                "verdict": should_buy,
+                "current_price": current_price,
+                "predicted_price": predicted_price,
+                "risk_percent": risk_percent
+            }
+
+            return analysis
         else:
             should_buy = "Should Buy"
-        analysis = {
-            "verdict": should_buy,
-            "current_price": current_price,
-            "predicted_price": predicted_price,
-            "buy_price": buy_price,
-            "sell_price": sell_price,
-            "risk_percent": risk_percent
-        }
+            analysis = {
+                "verdict": should_buy,
+                "current_price": current_price,
+                "predicted_price": predicted_price,
+                "buy_price": buy_price,
+                "sell_price": sell_price,
+                "risk_percent": risk_percent
+            }
 
-        return analysis
+            # return analysis
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
