@@ -21,6 +21,10 @@ class StockRequest(BaseModel):
     end_date: str
 
 
+class CompanyNameRequest(BaseModel):
+    name: str
+
+
 @app.post("/stock-data/")
 def get_stock_data(request: StockRequest):
     try:
@@ -109,10 +113,6 @@ def analyze_stock(ticker: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class CompanyNameRequest(BaseModel):
-    name: str
-
-
 @app.post("/search-companies/")
 def search_companies(request: CompanyNameRequest):
     try:
@@ -137,11 +137,12 @@ def search_companies(request: CompanyNameRequest):
 
 
 @app.get("/stock-plot/")
-async def stock_plot(ticker: str, years: int = Query(0, title="Years", ge=0), months: int = Query(0, title="Months", ge=0)):
+async def stock_plot(ticker: str, years: int = Query(0, title="Years", ge=0),
+                     months: int = Query(0, title="Months", ge=0)):
     try:
         # Calculate start and end dates based on years and months
         end_date = datetime.now().date()
-        start_date = end_date - timedelta(days=years*365 + months*30)
+        start_date = end_date - timedelta(days=years * 365 + months * 30)
 
         # Fetch historical data
         data = yf.download(ticker, start=start_date, end=end_date)
