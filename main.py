@@ -1,10 +1,16 @@
+import io
+import os
+import tempfile
 import traceback
+from datetime import datetime, timedelta
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
+from matplotlib import pyplot as plt
 from pydantic import BaseModel
 import yfinance as yf
 import ta
 import pandas as pd
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -123,3 +129,46 @@ def search_companies(request: CompanyNameRequest):
         raise HTTPException(status_code=500, detail="CSV file not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/stock-plot/")
+async def stock_plot(ticker: str, years: int = Query(0, title="Years", ge=0), months: int = Query(0, title="Months", ge=0)):
+    try:
+        # Calculate start and end dates based on years and months
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=years*365 + months*30)
+
+        # Fetch historical data
+        data = yf.download(ticker, start=start_date, end=end_date)
+
+        if data.empty:
+            raise HTTPException(status_code=404, detail=f"No data found for ticker {ticker}")
+
+        # Calculate technical indicators
+        data['SMA_50'] = ta.trend.sma_indicator(data['Close'], window=50)
+        data['SMA_200'] = ta.trend.sma_indicator(data['Close'], window=200)
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        plt.plot(data['Close'], label='Close Price')
+        plt.plot(data['SMA_50'], label='50-Day SMA')
+        plt.plot(data['SMA_200'], label='200-Day SMA')
+        plt.title(f'{ticker} Stock Price and Moving Averages')
+        plt.xlabel('Date')
+        plt.ylabel('Price')
+        plt.legend()
+        plt.grid(True)
+
+        # Save the plot to a temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        plt.savefig(temp_file.name)
+        plt.close()
+
+        # Return the plot as an image response
+        return FileResponse(temp_file.name, media_type='image/png')
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    # finally:
+    #     if 'temp_file' in locals() and os.path.exists(temp_file.name):
+    #         os.remove(temp_file.name)
