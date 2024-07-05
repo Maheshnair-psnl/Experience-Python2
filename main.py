@@ -56,7 +56,7 @@ def read_root():
 def analyze_stock(ticker: str):
     try:
         # Fetch the last 2 years of data
-        data = yf.download(ticker+".NO", period='2y')
+        data = yf.download(ticker+".NS", period='2y')
         if data.empty:
             raise HTTPException(status_code=404, detail="Data not found for the given ticker")
 
