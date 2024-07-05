@@ -3,7 +3,7 @@ import os
 import tempfile
 import traceback
 from datetime import datetime, timedelta
-
+from sklearn.linear_model import LinearRegression
 from fastapi import FastAPI, HTTPException, Query
 from matplotlib import pyplot as plt
 from pydantic import BaseModel
@@ -46,9 +46,6 @@ def get_stock_data(request: StockRequest):
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Stock Analysis API"}
-
-
-from sklearn.linear_model import LinearRegression
 
 
 @app.post("/stock-analysis/")
